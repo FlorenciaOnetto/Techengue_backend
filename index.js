@@ -4,7 +4,7 @@ const port = 3001;
 
 // Ruta simple para el hello world
 app.get('/', (req, res) => {
-  res.send('Hello World from Backend!!');
+  res.send('Hello World from Backend!');
 });
 
 // Inicia el servidor
