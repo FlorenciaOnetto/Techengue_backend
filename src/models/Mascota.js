@@ -10,21 +10,23 @@ const Mascota = sequelize.define('Mascota', {
     id_usuario: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'Usuarios',
-            key: 'id_usuario'
+            model: 'usuarios', 
+            key: 'id'
         }
     },
     nombre: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    tamaño_aproximado: DataTypes.STRING,
-    edad_aproximada: DataTypes.INTEGER,
+    tamano_aproximado: DataTypes.STRING,
+    edad_aproximada: DataTypes.INTEGER, // Almacena el valor numérico de la edad
+    edad_unidad: DataTypes.STRING,       // Almacena "meses" o "años"
     especie: DataTypes.STRING,
     raza: DataTypes.STRING,
     fotos: DataTypes.STRING,
     comportamiento: DataTypes.TEXT,
     salud: DataTypes.BOOLEAN,
+    region: DataTypes.STRING,
     created: DataTypes.DATE
 }, {
     tableName: 'mascotas',
