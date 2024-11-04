@@ -54,10 +54,9 @@ router.post(
 );
 
 router.get('/buscar', async (req, res) => {
-    const { especie, region, tamano_aproximado, edad_rango } = req.query;
+    const { especie, region, tamano_aproximado, edad_aproximada, edad_unidad } = req.query;
 
-    // Imprimir parámetros para depuración
-    console.log("Parámetros recibidos en el backend:", req.query);
+    console.log("Parámetros recibidos en req.query:", req.query);
 
     const condiciones = {
         ...(especie && { especie }),
@@ -65,20 +64,24 @@ router.get('/buscar', async (req, res) => {
         ...(tamano_aproximado && { tamano_aproximado })
     };
 
-    // Filtrar por rango de edad
-    if (edad_rango) {
-        const [minAge, maxAge] = edad_rango.split('-').map(Number); // Convertir a enteros
-        if (maxAge) {
+     // Filtrar por edad aproximada y unidad
+    if (edad_aproximada && edad_unidad) {
+        const valorEdad = parseInt(edad_aproximada, 10); // Asegúrate de que esto es un número
+
+        if (edad_unidad === 'meses') {
+            // Filtrar solo los que son menores o iguales a valorEdad
             condiciones.edad_aproximada = {
-                [Op.gte]: minAge,
-                [Op.lte]: maxAge
+                [Op.lte]: valorEdad // Hasta el número de meses
             };
-            condiciones.edad_unidad = minAge < 12 ? 'meses' : 'años'; // Ajusta la unidad de edad si es necesario
-        } else {
-            condiciones.edad_aproximada = { [Op.gte]: minAge }; // Para 7+
-            condiciones.edad_unidad = 'años';
+        } else if (edad_unidad === 'años') {
+            // Filtrar para años
+            condiciones.edad_aproximada = {
+                [Op.gte]: valorEdad * 12 // Convertir años a meses
+            };
         }
     }
+
+
 
     try {
         const mascotas = await Mascota.findAll({ where: condiciones });
@@ -88,6 +91,9 @@ router.get('/buscar', async (req, res) => {
         res.status(500).json({ error: 'Error al buscar mascotas' });
     }
 });
+
+
+
 
 router.get('/:id', async (req, res) => {
     try {
