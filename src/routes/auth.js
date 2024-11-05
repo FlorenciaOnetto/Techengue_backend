@@ -4,6 +4,32 @@ const jwt = require('jsonwebtoken');
 const Usuario = require('../models/Usuario');
 const router = express.Router();
 
+// Ruta para obtener los datos del usuario autenticado
+router.get('/profile', async (req, res) => {
+    try {
+        // Obtener el token del encabezado de la solicitud
+        const token = req.headers.authorization?.split(" ")[1];
+        if (!token) {
+            return res.status(401).json({ error: 'Token no proporcionado' });
+        }
+
+        // Verificar y decodificar el token
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const usuario = await Usuario.findByPk(decoded.id, {
+            attributes: ['id', 'nombre', 'email'] // Aquí puedes agregar otros atributos si necesitas
+        });
+
+        if (!usuario) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        res.json(usuario);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error en el servidor' });
+    }
+});
+
 // Ruta de registro (sin autenticación)
 router.post('/register', async (req, res) => {
     const { email, password, nombre } = req.body;
