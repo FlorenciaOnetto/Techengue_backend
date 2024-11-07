@@ -6,7 +6,7 @@ const path = require('path');
 const router = express.Router();
 const { Op } = require('sequelize');
 
-// Configuración de Multer
+// Configuración de Multer para manejar la subida de fotos
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/');
@@ -17,13 +17,12 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// routes/mascotas.js
 router.post(
     '/publicar',
     expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
     upload.single('fotos'),
     async (req, res) => {
-        const { nombre, tamano_aproximado, edad_aproximada, edad_unidad, especie, raza, comportamiento, salud, region } = req.body;
+        const { nombre, tamano_aproximado, edad_aproximada, edad_unidad, especie, raza, comportamiento, salud, region, detallesSalud } = req.body;
         const id_usuario = req.user.id;
         const fotos = req.file ? req.file.filename : null;
 
@@ -41,6 +40,7 @@ router.post(
                 fotos,
                 comportamiento,
                 salud: saludBoolean,
+                detallesSalud, // Asegúrate de guardar este campo
                 region,
                 id_usuario,
             });
@@ -53,44 +53,62 @@ router.post(
     }
 );
 
+
+
+// Ruta para obtener todas las mascotas publicadas por el usuario autenticado
+router.get(
+    '/mis-mascotas',
+    expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
+    async (req, res) => {
+        const id_usuario = req.user.id; // Obtener el ID del usuario del token
+
+        try {
+            const mascotas = await Mascota.findAll({
+                where: { id_usuario }
+            });
+
+            if (mascotas.length === 0) {
+                console.log("No se encontraron mascotas publicadas para el usuario.");
+            }
+
+            res.json(mascotas);
+        } catch (error) {
+            console.error("Error al obtener las mascotas del usuario:", error.message);
+            res.status(500).json({ error: 'Error al obtener las mascotas del usuario' });
+        }
+    }
+);
+
+// Ruta para buscar mascotas con filtros
 router.get('/buscar', async (req, res) => {
     const { especie, region, tamano_aproximado, edad_aproximada, edad_unidad } = req.query;
-
-    console.log("Parámetros recibidos en req.query:", req.query);
 
     const condiciones = {
         ...(especie && { especie }),
         ...(region && { region }),
-        ...(tamano_aproximado && { tamano_aproximado })
+        ...(tamano_aproximado && { tamano_aproximado }),
     };
 
-     // Filtrar por edad aproximada y unidad
     if (edad_aproximada && edad_unidad) {
-        const valorEdad = parseInt(edad_aproximada, 10); // Asegúrate de que esto es un número
+        const valorEdad = parseInt(edad_aproximada, 10);
+        
+        // Cambiar las condiciones para que sean exactamente iguales
+        condiciones.edad_aproximada = valorEdad;
+        condiciones.edad_unidad = edad_unidad; // Asegúrate de que este campo esté presente en el modelo
 
-        if (edad_unidad === 'meses') {
-            // Filtrar solo los que son menores o iguales a valorEdad
-            condiciones.edad_aproximada = {
-                [Op.lte]: valorEdad // Hasta el número de meses
-            };
-        } else if (edad_unidad === 'años') {
-            // Filtrar para años
-            condiciones.edad_aproximada = {
-                [Op.gte]: valorEdad * 12 // Convertir años a meses
-            };
-        }
+        // Asegúrate de que la condición para edad_unidad esté en tu modelo, si no, puedes omitirla
     }
-
-
 
     try {
         const mascotas = await Mascota.findAll({ where: condiciones });
+        console.log("Mascotas encontradas:", mascotas); // Log para ver las mascotas encontradas
         res.json(mascotas);
     } catch (error) {
         console.error("Error al buscar mascotas:", error.message);
         res.status(500).json({ error: 'Error al buscar mascotas' });
     }
 });
+
 
 // Ruta para obtener todas las mascotas
 router.get('/todas', async (req, res) => {
@@ -103,6 +121,8 @@ router.get('/todas', async (req, res) => {
 });
 
 
+
+// Ruta para obtener detalles de una mascota específica
 router.get('/:id', async (req, res) => {
     try {
         const mascota = await Mascota.findByPk(req.params.id);
@@ -115,6 +135,30 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ error: 'Error al obtener la mascota' });
     }
 });
+
+
+// Ruta para eliminar una mascota específica
+router.delete(
+    '/:id',
+    expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
+    async (req, res) => {
+        const id_usuario = req.user.id; // ID del usuario autenticado
+        const id_mascota = req.params.id;
+
+        try {
+            const mascota = await Mascota.findOne({ where: { id_mascota, id_usuario } });
+            if (!mascota) {
+                return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al usuario.' });
+            }
+
+            await mascota.destroy();
+            res.status(200).json({ message: 'Mascota eliminada exitosamente.' });
+        } catch (error) {
+            console.error("Error al eliminar la mascota:", error.message);
+            res.status(500).json({ error: 'Error al eliminar la mascota' });
+        }
+    }
+);
 
 
 

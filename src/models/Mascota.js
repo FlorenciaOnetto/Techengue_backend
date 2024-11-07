@@ -19,14 +19,15 @@ const Mascota = sequelize.define('Mascota', {
         allowNull: false
     },
     tamano_aproximado: DataTypes.STRING,
-    edad_aproximada: DataTypes.INTEGER, // Almacena el valor numérico de la edad
-    edad_unidad: DataTypes.STRING,       // Almacena "meses" o "años"
+    edad_aproximada: DataTypes.INTEGER,
+    edad_unidad: DataTypes.STRING,
     especie: DataTypes.STRING,
     raza: DataTypes.STRING,
     fotos: DataTypes.STRING,
     comportamiento: DataTypes.TEXT,
     salud: DataTypes.BOOLEAN,
     region: DataTypes.STRING,
+    detallesSalud: DataTypes.TEXT, // Agrega este campo para detalles de salud
     created: DataTypes.DATE
 }, {
     tableName: 'mascotas',
