@@ -6,7 +6,6 @@ const path = require('path');
 const router = express.Router();
 const { Op } = require('sequelize');
 
-// Configuración de Multer para manejar la subida de fotos
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads/');
@@ -53,6 +52,51 @@ router.post(
     }
 );
 
+// Ruta para actualizar una mascota
+router.put(
+    '/:id',
+    expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
+    upload.single('fotos'),
+    async (req, res) => {
+        const { id } = req.params;
+        const { nombre, tamano_aproximado, edad_aproximada, edad_unidad, especie, raza, comportamiento, salud, region, detallesSalud } = req.body;
+        const id_usuario = req.user.id; // ID del usuario autenticado
+        const fotos = req.file ? req.file.filename : null;
+
+        const edadAproximadaInt = parseInt(edad_aproximada, 10);
+        const saludBoolean = salud === 'true';
+
+        try {
+            const mascota = await Mascota.findOne({ where: { id_mascota: id, id_usuario } });
+            if (!mascota) {
+                return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al usuario.' });
+            }
+
+            // Actualiza los campos de la mascota
+            mascota.nombre = nombre;
+            mascota.tamano_aproximado = tamano_aproximado;
+            mascota.edad_aproximada = edadAproximadaInt;
+            mascota.edad_unidad = edad_unidad;
+            mascota.especie = especie;
+            mascota.raza = raza;
+            mascota.comportamiento = comportamiento;
+            mascota.salud = saludBoolean;
+            mascota.region = region;
+            mascota.detallesSalud = detallesSalud;
+
+            if (fotos) {
+                mascota.fotos = fotos; // Solo actualiza si se subió una nueva foto
+            }
+
+            await mascota.save();
+
+            res.status(200).json({ message: 'Mascota actualizada exitosamente', mascota });
+        } catch (error) {
+            console.error("Error al actualizar la mascota:", error.message);
+            res.status(500).json({ error: 'Error al actualizar la mascota' });
+        }
+    }
+);
 
 
 // Ruta para obtener todas las mascotas publicadas por el usuario autenticado
