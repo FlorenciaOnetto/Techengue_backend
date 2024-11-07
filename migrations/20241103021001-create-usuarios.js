@@ -1,10 +1,10 @@
-// migrations/YYYYMMDDHHMMSS-create-chats.js
+// migrations/YYYYMMDDHHMMSS-create-usuario.js
 'use strict';
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Chats', {
-      id_chat: {
+    await queryInterface.createTable('Usuarios', {
+      id_usuario: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
@@ -23,6 +23,6 @@ module.exports = {
     });
   },
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('Chats');
+    await queryInterface.dropTable('Usuarios');
   }
 };
