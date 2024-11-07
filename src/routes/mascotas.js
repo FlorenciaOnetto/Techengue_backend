@@ -92,7 +92,15 @@ router.get('/buscar', async (req, res) => {
     }
 });
 
-
+// Ruta para obtener todas las mascotas
+router.get('/todas', async (req, res) => {
+    try {
+        const mascotas = await Mascota.findAll();
+        res.json(mascotas);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 
 router.get('/:id', async (req, res) => {
@@ -107,5 +115,7 @@ router.get('/:id', async (req, res) => {
         res.status(500).json({ error: 'Error al obtener la mascota' });
     }
 });
+
+
 
 module.exports = router;
