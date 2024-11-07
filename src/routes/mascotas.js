@@ -88,31 +88,29 @@ router.get('/buscar', async (req, res) => {
     const condiciones = {
         ...(especie && { especie }),
         ...(region && { region }),
-        ...(tamano_aproximado && { tamano_aproximado })
+        ...(tamano_aproximado && { tamano_aproximado }),
     };
 
     if (edad_aproximada && edad_unidad) {
         const valorEdad = parseInt(edad_aproximada, 10);
+        
+        // Cambiar las condiciones para que sean exactamente iguales
+        condiciones.edad_aproximada = valorEdad;
+        condiciones.edad_unidad = edad_unidad; // Asegúrate de que este campo esté presente en el modelo
 
-        if (edad_unidad === 'meses') {
-            condiciones.edad_aproximada = {
-                [Op.lte]: valorEdad
-            };
-        } else if (edad_unidad === 'años') {
-            condiciones.edad_aproximada = {
-                [Op.gte]: valorEdad * 12
-            };
-        }
+        // Asegúrate de que la condición para edad_unidad esté en tu modelo, si no, puedes omitirla
     }
 
     try {
         const mascotas = await Mascota.findAll({ where: condiciones });
+        console.log("Mascotas encontradas:", mascotas); // Log para ver las mascotas encontradas
         res.json(mascotas);
     } catch (error) {
         console.error("Error al buscar mascotas:", error.message);
         res.status(500).json({ error: 'Error al buscar mascotas' });
     }
 });
+
 
 // Ruta para obtener detalles de una mascota específica
 router.get('/:id', async (req, res) => {
