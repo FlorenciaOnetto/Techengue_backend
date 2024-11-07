@@ -17,19 +17,14 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Ruta para publicar una mascota
 router.post(
     '/publicar',
     expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
     upload.single('fotos'),
     async (req, res) => {
-        const { nombre, tamano_aproximado, edad_aproximada, edad_unidad, especie, raza, comportamiento, salud, region } = req.body;
+        const { nombre, tamano_aproximado, edad_aproximada, edad_unidad, especie, raza, comportamiento, salud, region, detallesSalud } = req.body;
         const id_usuario = req.user.id;
         const fotos = req.file ? req.file.filename : null;
-
-        console.log("Datos recibidos en el backend:", {
-            nombre, tamano_aproximado, edad_aproximada, edad_unidad, especie, raza, comportamiento, salud, region, id_usuario, fotos
-        });
 
         const edadAproximadaInt = parseInt(edad_aproximada, 10);
         const saludBoolean = salud === 'true';
@@ -45,6 +40,7 @@ router.post(
                 fotos,
                 comportamiento,
                 salud: saludBoolean,
+                detallesSalud, // Asegúrate de guardar este campo
                 region,
                 id_usuario,
             });
@@ -56,6 +52,8 @@ router.post(
         }
     }
 );
+
+
 
 // Ruta para obtener todas las mascotas publicadas por el usuario autenticado
 router.get(
