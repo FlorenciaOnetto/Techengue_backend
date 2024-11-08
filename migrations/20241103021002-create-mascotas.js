@@ -28,6 +28,7 @@ module.exports = {
       comportamiento: Sequelize.TEXT,
       salud: Sequelize.BOOLEAN,
       region: Sequelize.STRING,
+      detallesSalud: Sequelize.TEXT,
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false,
