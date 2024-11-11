@@ -39,7 +39,7 @@ router.post(
                 fotos,
                 comportamiento,
                 salud: saludBoolean,
-                detallesSalud, // Asegúrate de guardar este campo
+                detallesSalud, 
                 region,
                 id_usuario,
             });
@@ -160,6 +160,7 @@ router.get('/todas', async (req, res) => {
         const mascotas = await Mascota.findAll();
         res.json(mascotas);
     } catch (error) {
+        console.error('Error en la consulta de mascotas:', error);
         res.status(500).json({ error: error.message });
     }
 });
