@@ -1,19 +1,26 @@
 const express = require('express');
+const expressJwt = require('express-jwt');
+const Solicitud = require('../models/Solicitud');
+const multer = require('multer');
+const path = require('path');
 const router = express.Router();
-const Solicitud = require('../models/Solicitud');  
+const { Op } = require('sequelize');
+
 
 // Ruta POST para crear una solicitud de adopción
-router.post('/crear', async (req, res) => {
-  console.log('Datos recibidos:', req.body);
-  const {
-    id_mascota,
-    id_potencial_adoptante,
-    estado,
-    razones,
-    descripcion_hogar,
-    experiencia,
-    contacto
-  } = req.body;
+router.post('/crear', 
+  expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
+  async (req, res) => {
+    console.log('Datos recibidos:', req.body);
+    const {
+      id_mascota,
+      id_potencial_adoptante,
+      estado,
+      razones,
+      descripcion_hogar,
+      experiencia,
+      contacto
+    } = req.body;
 
   try {
     // Crear una nueva solicitud

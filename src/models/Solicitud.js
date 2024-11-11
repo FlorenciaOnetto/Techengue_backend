@@ -10,14 +10,14 @@ const Solicitud = sequelize.define('Solicitud', {
     id_mascota: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'Mascotas',
+            model: 'mascotas',
             key: 'id_mascota'
         }
     },
     id_potencial_adoptante: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'Usuarios',
+            model: 'usuarios',
             key: 'id_usuario'
         }
     },
