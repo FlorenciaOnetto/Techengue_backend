@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "test": "jest -verbose",
+    "test": "jest -verbose --all",
     "migrate": "sequelize-cli db:migrate --config src/config/config.js"
   },
   "config": {
