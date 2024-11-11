@@ -3,6 +3,7 @@ const cors = require('cors');
 const sequelize = require('./config/database');
 const authRoutes = require('./routes/auth'); // Importa directamente sin destructuring
 const mascotasRoutes = require('./routes/mascotas');
+const solicitudesRoutes = require('./routes/solicitudes');
 const path = require('path');
 
 const app = express();
@@ -31,6 +32,7 @@ sequelize.sync();
 // Rutas
 app.use('/auth', authRoutes); 
 app.use('/mascotas', mascotasRoutes);
+app.use('/solicitudes', solicitudesRoutes);
 
 app.get('/', (req, res) => {
     res.send('Hello World from Backend!!!');
