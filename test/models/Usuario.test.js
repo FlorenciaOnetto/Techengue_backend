@@ -1,17 +1,17 @@
 // Import required modules
-const { sequelize } = require('../src/config/database'); // Import sequelize instance
-const Usuario = require('../src/models/Usuario');
-const Mascota = require('../src/models/Mascota'); // Assuming Mascota model exists
+const { sequelize } = require('../../src/config/database'); // Import sequelize instance
+const Usuario = require('../../src/models/Usuario');
+const Mascota = require('../../src/models/Mascota'); // Assuming Mascota model exists
 const { DataTypes } = require('sequelize');
 
 // Setup Jest hooks for the tests
-beforeAll(async () => {
-  await sequelize.sync({ force: true }); // Sync database and force reset
-});
+// beforeAll(async () => {
+//   await sequelize.sync({ force: true }); // Sync database and force reset
+// });
 
-afterAll(async () => {
-  await sequelize.close(); // Close the database connection after tests
-});
+// afterAll(async () => {
+//   await sequelize.close(); // Close the database connection after tests
+// });
 
 describe('Usuario Model', () => {
   test('should create a new Usuario successfully', async () => {
@@ -38,7 +38,6 @@ describe('Usuario Model', () => {
     
     await Usuario.create(usuarioData);
 
-    // Attempt to create another user with the same email
     await expect(Usuario.create(usuarioData)).rejects.toThrow();
   });
 

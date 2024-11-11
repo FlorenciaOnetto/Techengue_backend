@@ -1,16 +1,16 @@
-const { sequelize } = require('../src/config/database');
-const Resena = require('../src/models/Resena');
-const Adopcion = require('../src/models/Adopcion');
-const Solicitud = require('../src/models/Solicitud'); // Assuming Solicitud model exists
+const { sequelize } = require('../../src/config/database');
+const Resena = require('../../src/models/Resena');
+const Adopcion = require('../../src/models/Adopcion');
+const Solicitud = require('../../src/models/Solicitud'); // Assuming Solicitud model exists
 
 // Jest setup and teardown
-beforeAll(async () => {
-  await sequelize.sync({ force: true });
-});
+// beforeAll(async () => {
+//   await sequelize.sync({ force: true });
+// });
 
-afterAll(async () => {
-  await sequelize.close();
-});
+// afterAll(async () => {
+//   await sequelize.close();
+// });
 
 describe('Resena Model', () => {
   test('should create a new Resena successfully', async () => {

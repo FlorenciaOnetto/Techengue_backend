@@ -1,17 +1,17 @@
-const { sequelize } = require('../src/config/database');
-const Chat = require('../src/models/Chat');
-const Solicitud = require('../src/models/Solicitud');
-const Mensaje = require('../src/models/Mensaje'); // Assuming Mensaje model exists
+const { sequelize } = require('../../src/config/database');
+const Chat = require('../../src/models/Chat');
+const Solicitud = require('../../src/models/Solicitud');
+const Mensaje = require('../../src/models/Mensaje'); // Assuming Mensaje model exists
 
 
 // Jest setup and teardown
-beforeAll(async () => {
-  await sequelize.sync({ force: true });
-});
+// beforeAll(async () => {
+//   await sequelize.sync({ force: true });
+// });
 
-afterAll(async () => {
-  await sequelize.close();
-});
+// afterAll(async () => {
+//   await sequelize.close();
+// });
 
 describe('Chat Model', () => {
   test('should create a new Chat successfully', async () => {
