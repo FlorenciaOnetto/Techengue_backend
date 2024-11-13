@@ -6,47 +6,62 @@ module.exports = {
       id_solicitud: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        autoIncrement: true,
-        allowNull: false,
+        autoIncrement: true
       },
       id_mascota: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
-          model: 'Mascotas',
-          key: 'id_mascota',
+          model: 'Mascotas', // Asegúrate de que el nombre coincida con el de la tabla Mascotas
+          key: 'id_mascota'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onDelete: 'SET NULL'
       },
       id_potencial_adoptante: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
         references: {
-          model: 'Usuarios',
-          key: 'id_usuario',
+          model: 'Usuarios', // Asegúrate de que el nombre coincida con el de la tabla Usuarios
+          key: 'id_usuario'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onDelete: 'SET NULL'
       },
-      estado: Sequelize.STRING,
-      razones: Sequelize.TEXT,
-      descripcion_hogar: Sequelize.TEXT,
-      experiencia: Sequelize.BOOLEAN,
-      contacto: Sequelize.STRING,
-      createdAt: {
-        type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.NOW,
+      estado: {
+        type: Sequelize.STRING,
+        allowNull: true
       },
-      updatedAt: {
-        type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.NOW,
+      tipo_vivienda: {
+        type: Sequelize.TEXT,
+        allowNull: true
       },
+      otra_mascota: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true
+      },
+      experiencia: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true
+      },
+      descripcion_experiencia: {
+        type: Sequelize.TEXT,
+        allowNull: true
+      },
+      razones: {
+        type: Sequelize.TEXT,
+        allowNull: true
+      },
+      contacto: {
+        type: Sequelize.STRING,
+        allowNull: true
+      }
+      // No incluimos createdAt y updatedAt porque timestamps: false en el modelo
     });
   },
+
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('Solicitudes');
   }
 };
+

@@ -22,7 +22,7 @@ router.post(
     upload.single('fotos'),
     async (req, res) => {
         const { nombre, tamano_aproximado, edad_aproximada, edad_unidad, especie, raza, comportamiento, salud, region, detallesSalud } = req.body;
-        const id_usuario = req.user.id;
+        const id_usuario = req.user.id_usuario;
         const fotos = req.file ? req.file.filename : null;
 
         const edadAproximadaInt = parseInt(edad_aproximada, 10);
@@ -42,6 +42,7 @@ router.post(
                 detallesSalud, 
                 region,
                 id_usuario,
+                created: new Date(),
             });
 
             res.status(201).json({ message: 'Mascota publicada exitosamente', mascota: nuevaMascota });
@@ -58,16 +59,16 @@ router.put(
     expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
     upload.single('fotos'),
     async (req, res) => {
-        const { id } = req.params;
+        const { id_mascota } = req.params;
         const { nombre, tamano_aproximado, edad_aproximada, edad_unidad, especie, raza, comportamiento, salud, region, detallesSalud } = req.body;
-        const id_usuario = req.user.id; // ID del usuario autenticado
+        const id_usuario = req.user.id_usuario; // ID del usuario autenticado
         const fotos = req.file ? req.file.filename : null;
 
         const edadAproximadaInt = parseInt(edad_aproximada, 10);
         const saludBoolean = salud === 'true';
 
         try {
-            const mascota = await Mascota.findOne({ where: { id_mascota: id, id_usuario } });
+            const mascota = await Mascota.findOne({ where: { id_mascota: id_mascota, id_usuario } });
             if (!mascota) {
                 return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al usuario.' });
             }
@@ -104,7 +105,7 @@ router.get(
     '/mis-mascotas',
     expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
     async (req, res) => {
-        const id_usuario = req.user.id; // Obtener el ID del usuario del token
+        const id_usuario = req.user.id_usuario; // Obtener el ID del usuario del token
 
         try {
             const mascotas = await Mascota.findAll({
@@ -168,9 +169,9 @@ router.get('/todas', async (req, res) => {
 
 
 // Ruta para obtener detalles de una mascota específica
-router.get('/:id', async (req, res) => {
+router.get('/:id_mascota', async (req, res) => {
     try {
-        const mascota = await Mascota.findByPk(req.params.id);
+        const mascota = await Mascota.findByPk(req.params.id_mascota);
         if (!mascota) {
             return res.status(404).json({ error: 'Mascota no encontrada' });
         }
@@ -187,8 +188,8 @@ router.delete(
     '/:id',
     expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
     async (req, res) => {
-        const id_usuario = req.user.id; // ID del usuario autenticado
-        const id_mascota = req.params.id;
+        const id_usuario = req.user.id_usuario; // ID del usuario autenticado
+        const id_mascota = req.params.id_mascota;
 
         try {
             const mascota = await Mascota.findOne({ where: { id_mascota, id_usuario } });

@@ -18,7 +18,7 @@ const Resena = sequelize.define('Resena', {
     descripcion: DataTypes.TEXT,
     created: DataTypes.DATE
 }, {
-    tableName: 'resenas',
+    tableName: 'Resenas',
     timestamps: false
 });
 

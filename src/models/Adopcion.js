@@ -16,7 +16,7 @@ const Adopcion = sequelize.define('Adopcion', {
     },
     created: DataTypes.DATE
 }, {
-    tableName: 'adopciones',
+    tableName: 'Adopciones',
     timestamps: false
 });
 

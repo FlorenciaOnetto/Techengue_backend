@@ -1,4 +1,3 @@
-// migrations/YYYYMMDDHHMMSS-create-usuario.js
 'use strict';
 
 module.exports = {
@@ -7,21 +6,34 @@ module.exports = {
       id_usuario: {
         type: Sequelize.INTEGER,
         primaryKey: true,
-        autoIncrement: true,
+        autoIncrement: true
+      },
+      nombre: {
+        type: Sequelize.STRING,
         allowNull: false,
       },
-      createdAt: {
+      email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      password: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      createdAt: { // Si utilizas timestamps en tu modelo
+        allowNull: false,
         type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.NOW,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
-      updatedAt: {
+      updatedAt: { // Si utilizas timestamps en tu modelo
+        allowNull: false,
         type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.NOW,
-      },
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+      }
     });
   },
+
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('Usuarios');
   }

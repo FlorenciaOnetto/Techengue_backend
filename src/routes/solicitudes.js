@@ -1,49 +1,62 @@
 const express = require('express');
+const router = express.Router();
 const expressJwt = require('express-jwt');
 const Solicitud = require('../models/Solicitud');
-const multer = require('multer');
-const path = require('path');
-const router = express.Router();
-const { Op } = require('sequelize');
+const Mascota = require('../models/Mascota');
+const Usuario = require('../models/Usuario');
 
+// Ruta para obtener todas las solicitudes de una mascota específica
+router.get('/mascota/:id_mascota', async (req, res) => {
+    try {
+        const { id_mascota } = req.params;
+        // Encontrar todas las solicitudes para la mascota especificada
+        const solicitudes = await Solicitud.findAll({
+            where: { id_mascota: id_mascota },
+            include: [{ model: Mascota }, { model: Usuario, as: 'potencial_adoptante' }]
+        });
 
-// Ruta POST para crear una solicitud de adopción
-router.post('/crear', 
-  expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
-  async (req, res) => {
-    console.log('Datos recibidos:', req.body);
-    const {
-      id_mascota,
-      id_potencial_adoptante,
-      estado,
-      razones,
-      descripcion_hogar,
-      experiencia,
-      contacto
-    } = req.body;
-
-  try {
-    // Crear una nueva solicitud
-    const nuevaSolicitud = await Solicitud.create({
-      id_mascota,
-      id_potencial_adoptante,
-      estado,
-      razones,
-      descripcion_hogar,
-      experiencia,
-      contacto,
-      created: new Date()  // Asigna la fecha actual de creación
-    });
-
-    // Responder con el objeto creado
-    res.status(201).json({
-      message: 'Solicitud creada exitosamente',
-      data: nuevaSolicitud
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error al crear la solicitud', error });
-  }
+        res.json(solicitudes);
+    } catch (error) {
+        console.error('Error al obtener solicitudes:', error);
+        res.status(500).json({ error: 'Error al obtener solicitudes' });
+    }
 });
+
+
+// Ruta para crear una nueva solicitud de adopción
+router.post(
+    '/crear',
+    expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
+    async (req, res) => {
+        try {
+            const id_potencial_adoptante = req.user.id_usuario; // Obtener el ID del usuario autenticado
+            const { id_mascota, estado, razones, tipo_vivienda, otra_mascota, experiencia, descripcion_experiencia, contacto } = req.body;
+  
+            // Validar los campos requeridos
+            if (!id_mascota || !estado || !razones || !tipo_vivienda || !contacto) {
+                return res.status(400).json({ error: 'Faltan datos obligatorios para crear la solicitud' });
+            }
+  
+            // Crear la nueva solicitud
+            const nuevaSolicitud = await Solicitud.create({
+                id_mascota,
+                id_potencial_adoptante,
+                estado,
+                tipo_vivienda,
+                otra_mascota,
+                experiencia,
+                descripcion_experiencia,
+                razones,
+                contacto,
+                created: new Date()
+            });
+  
+            res.status(201).json({ message: 'Solicitud creada exitosamente', solicitud: nuevaSolicitud });
+        } catch (error) {
+            console.error('Error al crear la solicitud:', error);
+            res.status(500).json({ error: 'Error al crear la solicitud' });
+        }
+    }
+);
 
 module.exports = router;

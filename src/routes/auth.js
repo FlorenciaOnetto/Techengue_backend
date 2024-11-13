@@ -16,8 +16,8 @@ router.get('/profile', async (req, res) => {
 
         // Verificar y decodificar el token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const usuario = await Usuario.findByPk(decoded.id, {
-            attributes: ['id', 'nombre', 'email'] // Aquí puedes agregar otros atributos si necesitas
+        const usuario = await Usuario.findByPk(decoded.id_usuario, {
+            attributes: ['id_usuario', 'nombre', 'email'] // Aquí puedes agregar otros atributos si necesitas
         });
 
         if (!usuario) {
@@ -68,8 +68,8 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Credenciales incorrectas' });
         }
 
-        const token = jwt.sign({ id: usuario.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token, nombre: usuario.nombre, id: usuario.id });
+        const token = jwt.sign({ id_usuario: usuario.id_usuario }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        res.json({ token, nombre: usuario.nombre });
     } catch (error) {
         console.error("Error en la ruta de login:", error);
         res.status(500).json({ error: 'Error en el servidor' });
@@ -84,7 +84,7 @@ router.put('/profile', async (req, res) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     try {
-        const usuario = await Usuario.findByPk(decoded.id);
+        const usuario = await Usuario.findByPk(decoded.id_usuario);
         if (!usuario) {
             return res.status(404).json({ error: 'Usuario no encontrado' });
         }
@@ -103,7 +103,7 @@ router.put('/profile', async (req, res) => {
 // Ruta para eliminar el usuario
 router.delete('/profile', expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }), async (req, res) => {
     try {
-        const usuario = await Usuario.findByPk(req.user.id); // req.user.id proviene del token
+        const usuario = await Usuario.findByPk(req.user.id_usuario); // req.user.id proviene del token
 
         if (!usuario) {
             return res.status(404).json({ error: 'Usuario no encontrado' });

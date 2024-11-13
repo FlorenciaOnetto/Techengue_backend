@@ -13,13 +13,16 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Usuarios',
-          key: 'id_usuario',
+          model: 'Usuarios', // Asegúrate de que el nombre sea correcto
+          key: 'id_usuario', // Debe coincidir con el nombre en el modelo Usuario
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      nombre: Sequelize.STRING,
+      nombre: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
       tamano_aproximado: Sequelize.STRING,
       edad_aproximada: Sequelize.INTEGER,
       edad_unidad: Sequelize.STRING,
@@ -30,12 +33,7 @@ module.exports = {
       salud: Sequelize.BOOLEAN,
       region: Sequelize.STRING,
       detallesSalud: Sequelize.TEXT,
-      createdAt: {
-        type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.NOW,
-      },
-      updatedAt: {
+      created: {
         type: Sequelize.DATE,
         allowNull: false,
         defaultValue: Sequelize.NOW,

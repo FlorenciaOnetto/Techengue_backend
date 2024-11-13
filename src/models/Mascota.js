@@ -10,8 +10,8 @@ const Mascota = sequelize.define('Mascota', {
     id_usuario: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'usuarios', 
-            key: 'id'
+            model: 'Usuarios', 
+            key: 'id_usuario'
         }
     },
     nombre: {
@@ -30,7 +30,7 @@ const Mascota = sequelize.define('Mascota', {
     detallesSalud: DataTypes.TEXT, // Agrega este campo para detalles de salud
     created: DataTypes.DATE
 }, {
-    tableName: 'mascotas',
+    tableName: 'Mascotas',
     timestamps: false
 });
 
