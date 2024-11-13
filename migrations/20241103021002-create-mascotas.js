@@ -13,27 +13,27 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
-          model: 'Usuarios',
-          key: 'id_usuario',
+          model: 'Usuarios', // Asegúrate de que el nombre sea correcto
+          key: 'id_usuario', // Debe coincidir con el nombre en el modelo Usuario
         },
         onUpdate: 'CASCADE',
         onDelete: 'CASCADE',
       },
-      nombre: Sequelize.STRING,
-      tamaño_aproximado: Sequelize.STRING,
+      nombre: {
+        type: Sequelize.STRING,
+        allowNull: false,
+      },
+      tamano_aproximado: Sequelize.STRING,
       edad_aproximada: Sequelize.INTEGER,
+      edad_unidad: Sequelize.STRING,
       especie: Sequelize.STRING,
       raza: Sequelize.STRING,
       fotos: Sequelize.STRING,
       comportamiento: Sequelize.TEXT,
       salud: Sequelize.BOOLEAN,
       region: Sequelize.STRING,
-      createdAt: {
-        type: Sequelize.DATE,
-        allowNull: false,
-        defaultValue: Sequelize.NOW,
-      },
-      updatedAt: {
+      detallesSalud: Sequelize.TEXT,
+      created: {
         type: Sequelize.DATE,
         allowNull: false,
         defaultValue: Sequelize.NOW,

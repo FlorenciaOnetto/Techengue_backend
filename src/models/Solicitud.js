@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const Mascota = require('./Mascota');
 
 const Solicitud = sequelize.define('Solicitud', {
     id_solicitud: {
@@ -10,23 +11,25 @@ const Solicitud = sequelize.define('Solicitud', {
     id_mascota: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'mascotas',
+            model: 'Mascotas',
             key: 'id_mascota'
         }
     },
     id_potencial_adoptante: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'usuarios',
+            model: 'Usuarios',
             key: 'id_usuario'
         }
     },
     estado: DataTypes.STRING,
-    razones: DataTypes.TEXT,
-    descripcion_hogar: DataTypes.TEXT,
+    tipo_vivienda: DataTypes.TEXT,
+    otra_mascota: DataTypes.BOOLEAN,
     experiencia: DataTypes.BOOLEAN,
-    contacto: DataTypes.STRING,
-    created: DataTypes.DATE
+    descripcion_experiencia: DataTypes.TEXT,
+    razones: DataTypes.TEXT,
+    contacto: DataTypes.STRING,    
+
 }, {
     tableName: 'Solicitudes',
     timestamps: false
@@ -34,9 +37,8 @@ const Solicitud = sequelize.define('Solicitud', {
 
 Solicitud.associate = (models) => {
     Solicitud.belongsTo(models.Mascota, { foreignKey: 'id_mascota' });
-    Solicitud.belongsTo(models.Usuario, { foreignKey: 'id_potencial_adoptante' });
-    Solicitud.hasOne(models.Adopcion, { foreignKey: 'id_solicitud' });
-    Solicitud.hasOne(models.Chat, { foreignKey: 'id_solicitud' });
+    Solicitud.belongsTo(require('./Usuario'), { foreignKey: 'id_potencial_adoptante', as: 'potencial_adoptante' });
+    //Solicitud.hasOne(models.Adopcion, { foreignKey: 'id_solicitud' });
 };
 
 module.exports = Solicitud;
