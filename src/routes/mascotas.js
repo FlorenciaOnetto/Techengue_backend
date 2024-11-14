@@ -39,7 +39,7 @@ router.post(
                 fotos,
                 comportamiento,
                 salud: saludBoolean,
-                detallesSalud, 
+                detallesSalud, // Asegúrate de guardar este campo
                 region,
                 id_usuario,
                 created: new Date(),
@@ -55,7 +55,7 @@ router.post(
 
 // Ruta para actualizar una mascota
 router.put(
-    '/:id',
+    '/:id_mascota',
     expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
     upload.single('fotos'),
     async (req, res) => {
@@ -161,7 +161,6 @@ router.get('/todas', async (req, res) => {
         const mascotas = await Mascota.findAll();
         res.json(mascotas);
     } catch (error) {
-        console.error('Error en la consulta de mascotas:', error);
         res.status(500).json({ error: error.message });
     }
 });
