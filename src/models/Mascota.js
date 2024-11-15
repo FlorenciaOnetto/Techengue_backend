@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
+const Solicitud = require('./Solicitud'); // Asegurarse de que Solicitud esté correctamente importado
 
 const Mascota = sequelize.define('Mascota', {
     id_mascota: {
@@ -27,7 +28,7 @@ const Mascota = sequelize.define('Mascota', {
     comportamiento: DataTypes.TEXT,
     salud: DataTypes.BOOLEAN,
     region: DataTypes.STRING,
-    detallesSalud: DataTypes.TEXT, // Agrega este campo para detalles de salud
+    detallesSalud: DataTypes.TEXT,
     created: DataTypes.DATE
 }, {
     tableName: 'Mascotas',
@@ -36,7 +37,7 @@ const Mascota = sequelize.define('Mascota', {
 
 Mascota.associate = (models) => {
     Mascota.belongsTo(models.Usuario, { foreignKey: 'id_usuario' });
-    Mascota.hasMany(models.Solicitud, { foreignKey: 'id_mascota' });
+    Mascota.hasMany(models.Solicitud, { foreignKey: 'id_mascota', as: 'solicitudes' });
 };
 
 module.exports = Mascota;

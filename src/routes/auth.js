@@ -8,16 +8,14 @@ const router = express.Router();
 // Ruta para obtener los datos del usuario autenticado
 router.get('/profile', async (req, res) => {
     try {
-        // Obtener el token del encabezado de la solicitud
         const token = req.headers.authorization?.split(" ")[1];
         if (!token) {
             return res.status(401).json({ error: 'Token no proporcionado' });
         }
 
-        // Verificar y decodificar el token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const usuario = await Usuario.findByPk(decoded.id_usuario, {
-            attributes: ['id_usuario', 'nombre', 'email'] // Aquí puedes agregar otros atributos si necesitas
+            attributes: ['id_usuario', 'nombre', 'email']
         });
 
         if (!usuario) {
@@ -26,12 +24,12 @@ router.get('/profile', async (req, res) => {
 
         res.json(usuario);
     } catch (error) {
-        console.error(error);
+        console.error("Error al obtener perfil:", error);
         res.status(500).json({ error: 'Error en el servidor' });
     }
 });
 
-// Ruta de registro (sin autenticación)
+// Ruta de registro
 router.post('/register', async (req, res) => {
     const { email, password, nombre } = req.body;
 
@@ -42,29 +40,27 @@ router.post('/register', async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const nuevoUsuario = await Usuario.create({ nombre, email, password: hashedPassword });
+        await Usuario.create({ nombre, email, password: hashedPassword });
 
         res.status(201).json({ message: 'Usuario registrado exitosamente' });
     } catch (error) {
-        console.error(error);
+        console.error("Error al registrar usuario:", error);
         res.status(500).json({ error: 'Error en el servidor' });
     }
 });
 
-// Ruta de inicio de sesión (sin autenticación)
+// Ruta de inicio de sesión
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
         const usuario = await Usuario.findOne({ where: { email } });
         if (!usuario) {
-            console.log("Usuario no encontrado:", email);
             return res.status(401).json({ error: 'Credenciales incorrectas' });
         }
 
         const esPasswordCorrecta = await bcrypt.compare(password, usuario.password);
         if (!esPasswordCorrecta) {
-            console.log("Contraseña incorrecta para el usuario:", email);
             return res.status(401).json({ error: 'Credenciales incorrectas' });
         }
 
@@ -76,15 +72,15 @@ router.post('/login', async (req, res) => {
     }
 });
 
-
 // Ruta para actualizar los datos del usuario
 router.put('/profile', async (req, res) => {
     const { nombre, email } = req.body;
     const token = req.headers.authorization?.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+    
     try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const usuario = await Usuario.findByPk(decoded.id_usuario);
+        
         if (!usuario) {
             return res.status(404).json({ error: 'Usuario no encontrado' });
         }
@@ -95,7 +91,7 @@ router.put('/profile', async (req, res) => {
 
         res.json({ message: 'Perfil actualizado exitosamente', usuario });
     } catch (error) {
-        console.error(error);
+        console.error("Error al actualizar perfil:", error);
         res.status(500).json({ error: 'Error en el servidor' });
     }
 });
@@ -103,20 +99,18 @@ router.put('/profile', async (req, res) => {
 // Ruta para eliminar el usuario
 router.delete('/profile', expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }), async (req, res) => {
     try {
-        const usuario = await Usuario.findByPk(req.user.id_usuario); // req.user.id proviene del token
+        const usuario = await Usuario.findByPk(req.user.id_usuario); 
 
         if (!usuario) {
             return res.status(404).json({ error: 'Usuario no encontrado' });
         }
 
-        await usuario.destroy(); // Elimina el usuario
-        res.status(204).send(); // Envío de respuesta vacía
+        await usuario.destroy();
+        res.status(204).send();
     } catch (error) {
         console.error("Error al eliminar el usuario:", error.message);
         res.status(500).json({ error: 'Error al eliminar el usuario' });
     }
 });
-
-
 
 module.exports = router;
