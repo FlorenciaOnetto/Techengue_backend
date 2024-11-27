@@ -11,14 +11,14 @@ const Solicitud = sequelize.define('Solicitud', {
     id_mascota: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'mascotas',
+            model: 'Mascotas',
             key: 'id_mascota'
         }
     },
     id_potencial_adoptante: {
         type: DataTypes.INTEGER,
         references: {
-            model: 'usuarios',
+            model: 'Usuarios',
             key: 'id_usuario'
         }
     },
@@ -36,9 +36,9 @@ const Solicitud = sequelize.define('Solicitud', {
 });
 
 Solicitud.associate = (models) => {
-    Solicitud.belongsTo(models.Mascota, { foreignKey: 'id_mascota' });
-    Solicitud.belongsTo(require('./Usuario'), { foreignKey: 'id_potencial_adoptante', as: 'potencial_adoptante' });
-    //Solicitud.hasOne(models.Adopcion, { foreignKey: 'id_solicitud' });
+    Solicitud.belongsTo(models.Mascota, { foreignKey: 'id_mascota', as: 'Mascota' }); // Añadido 'as'
+    Solicitud.belongsTo(models.Usuario, { foreignKey: 'id_potencial_adoptante', as: 'potencial_adoptante' });
 };
+
 
 module.exports = Solicitud;

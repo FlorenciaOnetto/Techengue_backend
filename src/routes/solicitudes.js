@@ -59,4 +59,34 @@ router.post(
     }
 );
 
+router.get(
+    '/usuario/solicitudes',
+    expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
+    async (req, res) => {
+        try {
+            const id_usuario = req.user.id_usuario; // ID del usuario autenticado
+            
+            // Consulta con include para traer la relación con Mascota
+            const solicitudes = await Solicitud.findAll({
+                where: { id_potencial_adoptante: id_usuario },
+                include: [
+                    {
+                        model: Mascota,
+                        as: 'mascota' // Usar el alias definido en la asociación
+                    }
+                ]
+            });
+
+            res.json(solicitudes); // Enviar las solicitudes con sus relaciones
+        } catch (error) {
+            console.error('Error al obtener solicitudes:', error);
+            res.status(500).json({ error: 'Error al obtener solicitudes' });
+        }
+    }
+);
+
+
+
+
+
 module.exports = router;

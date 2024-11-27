@@ -36,7 +36,7 @@ const Mascota = sequelize.define('Mascota', {
 
 Mascota.associate = (models) => {
     Mascota.belongsTo(models.Usuario, { foreignKey: 'id_usuario' });
-    Mascota.hasMany(models.Solicitud, { foreignKey: 'id_mascota' });
+    Mascota.hasMany(models.Solicitud, { foreignKey: 'id_mascota', as: 'Solicitudes' });
 };
 
 module.exports = Mascota;
