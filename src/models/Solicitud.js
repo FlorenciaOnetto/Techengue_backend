@@ -36,7 +36,7 @@ const Solicitud = sequelize.define('Solicitud', {
 });
 
 Solicitud.associate = (models) => {
-    Solicitud.belongsTo(models.Mascota, { foreignKey: 'id_mascota', as: 'Mascota' }); // Añadido 'as'
+    Solicitud.belongsTo(models.Mascota, { foreignKey: 'id_mascota', as: 'mascota' });
     Solicitud.belongsTo(models.Usuario, { foreignKey: 'id_potencial_adoptante', as: 'potencial_adoptante' });
 };
 

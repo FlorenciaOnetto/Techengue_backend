@@ -5,6 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const router = express.Router();
 const { Op } = require('sequelize');
+const Solicitud = require('../models/Solicitud');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -182,28 +183,30 @@ router.get('/:id_mascota', async (req, res) => {
 });
 
 
-// Ruta para eliminar una mascota específica
-router.delete(
-    '/:id',
-    expressJwt({ secret: process.env.JWT_SECRET, algorithms: ['HS256'] }),
-    async (req, res) => {
-        const id_usuario = req.user.id_usuario; // ID del usuario autenticado
-        const id_mascota = req.params.id_mascota;
 
-        try {
-            const mascota = await Mascota.findOne({ where: { id_mascota, id_usuario } });
-            if (!mascota) {
-                return res.status(404).json({ error: 'Mascota no encontrada o no pertenece al usuario.' });
-            }
+router.delete('/:id_mascota', async (req, res) => {
+    const { id_mascota } = req.params;
 
-            await mascota.destroy();
-            res.status(200).json({ message: 'Mascota eliminada exitosamente.' });
-        } catch (error) {
-            console.error("Error al eliminar la mascota:", error.message);
-            res.status(500).json({ error: 'Error al eliminar la mascota' });
+    try {
+        // Verificar si la mascota existe
+        const mascota = await Mascota.findByPk(id_mascota);
+
+        if (!mascota) {
+            return res.status(404).json({ error: 'Mascota no encontrada' });
         }
+
+        // Eliminar las solicitudes asociadas a esta mascota
+        await Solicitud.destroy({ where: { id_mascota } });
+
+        // Eliminar la mascota
+        await mascota.destroy();
+
+        res.status(200).json({ message: 'Mascota eliminada correctamente' });
+    } catch (error) {
+        console.error('Error al eliminar la mascota:', error);
+        res.status(500).json({ error: 'Error al eliminar la mascota' });
     }
-);
+});
 
 
 
