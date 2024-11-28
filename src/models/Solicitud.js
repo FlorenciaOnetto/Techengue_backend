@@ -40,4 +40,5 @@ Solicitud.associate = (models) => {
     Solicitud.belongsTo(models.Usuario, { foreignKey: 'id_potencial_adoptante', as: 'potencial_adoptante' });
 };
 
+
 module.exports = Solicitud;
