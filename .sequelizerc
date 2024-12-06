@@ -1,0 +1,6 @@
+const path = require('path');
+
+module.exports = {
+  config: path.resolve('src/config/config.js'),  // Asegúrate de que esta ruta sea correcta
+  modelsPath: path.resolve('src/models'),
+};
