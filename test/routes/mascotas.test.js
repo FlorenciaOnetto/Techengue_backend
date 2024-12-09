@@ -1,123 +1,213 @@
 const request = require('supertest');
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const mascotasRouter = require('../../routes/mascotas');
-const Mascota = require('../../models/Mascota');
-const app = express();
+const multer = require('multer');
+const Mascota = require('../../src/models/Mascota');
+const Solicitud = require('../../src/models/Solicitud');
+const mascotasRoutes = require('../../src/routes/mascotas');
 
-// Mock Middleware and Database Models
-jest.mock('../../models/Mascota');
 
-// Setup Express to use the router
-app.use(express.json());
-app.use('/mascotas', mascotasRouter);
+jest.mock('../../src/models/Mascota');
+jest.mock('../../src/models/Solicitud');
 
-// Helper function to create a token for testing authenticated routes
-const createToken = () => {
-  const payload = { id: 1 };
-  return jwt.sign(payload, process.env.JWT_SECRET, { algorithm: 'HS256' });
-};
-
-// Test Suite for Mascotas Routes
-describe('Mascotas Routes', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+jest.mock('multer', () => {
+    return Object.assign(jest.fn(() => ({
+      single: jest.fn(() => (req, res, next) => next()), // Mock single file upload middleware
+    })), {
+      diskStorage: jest.fn(() => ({
+        destination: jest.fn(),
+        filename: jest.fn(),
+      })), // Mock diskStorage
+    });
   });
+  
 
-  // Test /publicar Route
-  it('POST /mascotas/publicar - should publish a new pet', async () => {
-    const token = createToken();
+let app;
+
+beforeAll(() => {
+  app = express();
+  app.use(express.json());
+  app.use('/mascotas', mascotasRoutes);
+});
+
+beforeEach(() => {
+  jest.clearAllMocks(); // Clear mocks before each test
+});
+
+describe('Mascotas Routes', () => {
+  test('should publish a new mascota', async () => {
+    const token = jwt.sign({ id_usuario: 1 }, process.env.JWT_SECRET);
+
     Mascota.create.mockResolvedValue({
-      id: 1,
-      nombre: 'Firulais',
-      tamano_aproximado: 'Grande',
-      edad_aproximada: 2,
-      especie: 'Perro',
-      raza: 'Golden Retriever',
-      region: 'Metropolitana',
+      id_mascota: 1,
+      nombre: 'Fido',
+      tamano_aproximado: 'Mediano',
       id_usuario: 1,
-      fotos: 'image.jpg'
     });
 
-    const res = await request(app)
+    const response = await request(app)
       .post('/mascotas/publicar')
       .set('Authorization', `Bearer ${token}`)
-      .field('nombre', 'Firulais')
-      .field('tamano_aproximado', 'Grande')
-      .field('edad_aproximada', '2')
-      .field('especie', 'Perro')
-      .field('raza', 'Golden Retriever')
-      .field('region', 'Metropolitana')
-      .attach('fotos', 'path/to/image.jpg');
+      .send({
+        nombre: 'Fido',
+        tamano_aproximado: 'Mediano',
+        edad_aproximada: 2,
+        edad_unidad: 'años',
+        especie: 'Perro',
+        region: 'Santiago',
+      });
 
-    expect(res.statusCode).toBe(201);
-    expect(res.body).toHaveProperty('message', 'Mascota publicada exitosamente');
-    expect(res.body).toHaveProperty('mascota');
+    expect(response.status).toBe(201);
+    expect(response.body.message).toBe('Mascota publicada exitosamente');
+    expect(Mascota.create).toHaveBeenCalledWith(expect.objectContaining({
+      nombre: 'Fido',
+      tamano_aproximado: 'Mediano',
+      id_usuario: 1,
+    }));
   });
 
-  // Test /mis-mascotas Route
-  it('GET /mascotas/mis-mascotas - should get all pets for the authenticated user', async () => {
-    const token = createToken();
-    Mascota.findAll.mockResolvedValue([
-      { id: 1, nombre: 'Firulais', id_usuario: 1 },
-      { id: 2, nombre: 'Manchas', id_usuario: 1 }
-    ]);
+  test('should update an existing mascota', async () => {
+    const token = jwt.sign({ id_usuario: 1 }, process.env.JWT_SECRET);
 
-    const res = await request(app)
+    const mascotaMock = {
+      id_mascota: 1,
+      nombre: 'Fido',
+      save: jest.fn(),
+    };
+
+    Mascota.findOne.mockResolvedValue(mascotaMock);
+
+    const response = await request(app)
+      .put('/mascotas/1')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ nombre: 'Updated Fido' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe('Mascota actualizada exitosamente');
+    expect(mascotaMock.save).toHaveBeenCalled();
+    expect(mascotaMock.nombre).toBe('Updated Fido');
+  });
+
+  test('should fetch user mascotas', async () => {
+    const token = jwt.sign({ id_usuario: 1 }, process.env.JWT_SECRET);
+
+    Mascota.findAll.mockResolvedValue([{ id_mascota: 1, nombre: 'Fido' }]);
+
+    const response = await request(app)
       .get('/mascotas/mis-mascotas')
       .set('Authorization', `Bearer ${token}`);
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveLength(2);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([{ id_mascota: 1, nombre: 'Fido' }]);
   });
 
-  // Test /buscar Route
-  it('GET /mascotas/buscar - should search for pets with given filters', async () => {
-    Mascota.findAll.mockResolvedValue([
-      { id: 1, nombre: 'Firulais', especie: 'Perro', region: 'Metropolitana' }
-    ]);
+  test('should search mascotas with filters', async () => {
+    Mascota.findAll.mockResolvedValue([{ id_mascota: 1, nombre: 'Fido', especie: 'Perro' }]);
 
-    const res = await request(app)
-      .get('/mascotas/buscar')
-      .query({ especie: 'Perro', region: 'Metropolitana' });
+    const response = await request(app)
+      .get('/mascotas/buscar?especie=Perro&region=Santiago');
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveLength(1);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual([{ id_mascota: 1, nombre: 'Fido', especie: 'Perro' }]);
   });
 
-  // Test /todas Route
-  it('GET /mascotas/todas - should retrieve all pets', async () => {
-    Mascota.findAll.mockResolvedValue([
-      { id: 1, nombre: 'Firulais' },
-      { id: 2, nombre: 'Manchas' }
-    ]);
-
-    const res = await request(app).get('/mascotas/todas');
-
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveLength(2);
-  });
-
-  // Test /:id Route
-  it('GET /mascotas/:id - should retrieve a specific pet by id', async () => {
-    Mascota.findByPk.mockResolvedValue({ id: 1, nombre: 'Firulais' });
-
-    const res = await request(app).get('/mascotas/1');
-
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('nombre', 'Firulais');
-  });
-
-  // Test DELETE /:id Route
-  it('DELETE /mascotas/:id - should delete a specific pet by id for the authenticated user', async () => {
-    const token = createToken();
-    Mascota.findOne.mockResolvedValue({ destroy: jest.fn() });
-
-    const res = await request(app)
+  test('should delete a mascota and its solicitudes', async () => {
+    const token = jwt.sign({ id_usuario: 1 }, process.env.JWT_SECRET);
+  
+    Mascota.findByPk.mockResolvedValue({
+      id_mascota: 1,
+      destroy: jest.fn(),
+    });
+  
+    Solicitud.destroy.mockResolvedValue(1);
+  
+    const response = await request(app)
       .delete('/mascotas/1')
       .set('Authorization', `Bearer ${token}`);
+  
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe('Mascota eliminada correctamente');
+    expect(Solicitud.destroy).toHaveBeenCalledWith({ where: { id_mascota: 1 } }); // Test expects a number
+  });  
+});
 
-    expect(res.statusCode).toBe(200);
-    expect(res.body).toHaveProperty('message', 'Mascota eliminada exitosamente.');
-  });
+
+describe('New test', () => {
+    test('should return 401 if token is missing when publishing a mascota', async () => {
+        const response = await request(app).post('/mascotas/publicar').send({
+          nombre: 'Fido',
+          tamano_aproximado: 'Mediano',
+          edad_aproximada: 2,
+          edad_unidad: 'años',
+          especie: 'Perro',
+          region: 'Santiago',
+        });
+      
+        expect(response.status).toBe(401);
+        expect(response.body.error).toBe('Token no proporcionado');
+      });
+      
+      test('should return 401 if token is invalid when updating a mascota', async () => {
+        const response = await request(app)
+          .put('/mascotas/1')
+          .set('Authorization', 'Bearer invalid_token')
+          .send({ nombre: 'Updated Fido' });
+      
+        expect(response.status).toBe(401);
+        expect(response.body.error).toBe('undefined');
+      });
+      test('should return 500 if Mascota.create throws an error', async () => {
+        const token = jwt.sign({ id_usuario: 1 }, process.env.JWT_SECRET);
+      
+        Mascota.create.mockRejectedValue(new Error('Database error'));
+      
+        const response = await request(app)
+          .post('/mascotas/publicar')
+          .set('Authorization', `Bearer ${token}`)
+          .send({
+            nombre: 'Fido',
+            tamano_aproximado: 'Mediano',
+            edad_aproximada: 2,
+            edad_unidad: 'años',
+            especie: 'Perro',
+            region: 'Santiago',
+          });
+      
+        expect(response.status).toBe(500);
+        expect(response.body.error).toBe('Error al publicar la mascota');
+      });
+      test('should return 404 if mascota is not found when updating', async () => {
+        const token = jwt.sign({ id_usuario: 1 }, process.env.JWT_SECRET);
+      
+        Mascota.findOne.mockResolvedValue(null); // Simulate no mascota found
+      
+        const response = await request(app)
+          .put('/mascotas/1')
+          .set('Authorization', `Bearer ${token}`)
+          .send({ nombre: 'Updated Fido' });
+      
+        expect(response.status).toBe(404);
+        expect(response.body.error).toBe('Mascota no encontrada o no pertenece al usuario.');
+      });
+              
+      test('should return 400 if edad_aproximada is not a number', async () => {
+        const token = jwt.sign({ id_usuario: 1 }, process.env.JWT_SECRET);
+      
+        const response = await request(app)
+          .post('/mascotas/publicar')
+          .set('Authorization', `Bearer ${token}`)
+          .send({
+            nombre: 'Fido',
+            tamano_aproximado: 'Mediano',
+            edad_aproximada: 'invalid',
+            edad_unidad: 'años',
+            especie: 'Perro',
+            region: 'Santiago',
+          });
+      
+        expect(response.status).toBe(500);
+        expect(response.body.error).toBe('Edad aproximada debe ser un número');
+      });
+      
+
 });

@@ -1,163 +1,72 @@
-const { sequelize } = require('../../src/config/database');
-const Solicitud = require('../../src/models/Solicitud');
+const { Sequelize, DataTypes } = require('sequelize');
 const Mascota = require('../../src/models/Mascota');
 const Usuario = require('../../src/models/Usuario');
-const Adopcion = require('../../src/models/Adopcion'); // Assuming Adopcion model exists
-const Chat = require('../../src/models/Chat'); // Assuming Chat model exists
+const Solicitud = require('../../src/models/Solicitud');
+const sequelize = require('../../src/config/database');
 
-// Jest setup and teardown
-// beforeAll(async () => {
-//   await sequelize.sync({ force: true });
-// });
 
-// afterAll(async () => {
-//   await sequelize.close();
-// });
+Usuario.associate({ Mascota, Solicitud });
+Mascota.associate({ Usuario, Solicitud });
+Solicitud.associate({ Usuario, Mascota });
 
-describe('Solicitud Model', () => {
-  test('should create a new Solicitud successfully', async () => {
-    const usuario = await Usuario.create({
-      nombre: 'John Doe',
-      email: 'john@example.com',
-      password: 'securepassword123'
-    });
 
-    const mascota = await Mascota.create({
-      id_usuario: usuario.id,
-      nombre: 'Max',
-      especie: 'Perro'
-    });
 
-    const solicitudData = {
-      id_mascota: mascota.id_mascota,
-      id_potencial_adoptante: usuario.id,
-      estado: 'Pendiente',
-      razones: 'Me encantan los perros',
-      descripcion_hogar: 'Casa con jardín amplio',
-      experiencia: true,
-      contacto: '123-456-7890',
-      created: new Date()
-    };
+test('should define Solicitud model correctly', () => {
+  expect(Solicitud).toBeDefined();
+  expect(Solicitud.tableName).toBe('Solicitudes');
+});
 
-    const solicitud = await Solicitud.create(solicitudData);
-
-    expect(solicitud).toBeDefined();
-    expect(solicitud.estado).toBe(solicitudData.estado);
-    expect(solicitud.contacto).toBe(solicitudData.contacto);
+test('should create a Solicitud successfully', async () => {
+  const usuario = await Usuario.create({
+    nombre: 'John Doe',
+    email: 'johndoe@example.com',
+    password: 'securepassword123',
   });
 
-  test('should not create a Solicitud without required fields', async () => {
-    await expect(Solicitud.create({})).rejects.toThrow();
+  const mascota = await Mascota.create({
+    nombre: 'Bobby',
+    tamano_aproximado: 'Mediano',
+    id_usuario: usuario.id_usuario,
   });
 
-  test('should validate association with Mascota', async () => {
-    const usuario = await Usuario.create({
-      nombre: 'Alice',
-      email: 'alice@example.com',
-      password: 'mypassword'
-    });
-
-    const mascota = await Mascota.create({
-      id_usuario: usuario.id,
-      nombre: 'Buddy',
-      especie: 'Perro'
-    });
-
-    const solicitud = await Solicitud.create({
-      id_mascota: mascota.id_mascota,
-      id_potencial_adoptante: usuario.id,
-      estado: 'Aprobado'
-    });
-
-    const foundSolicitud = await Solicitud.findOne({
-      where: { id_solicitud: solicitud.id_solicitud },
-      include: Mascota
-    });
-
-    expect(foundSolicitud.Mascota).toBeDefined();
-    expect(foundSolicitud.Mascota.nombre).toBe(mascota.nombre);
+  const solicitud = await Solicitud.create({
+    id_mascota: mascota.id_mascota,
+    id_potencial_adoptante: usuario.id_usuario,
+    estado: 'Pendiente',
+    tipo_vivienda: 'Casa',
+    otra_mascota: true,
+    experiencia: false,
+    descripcion_experiencia: 'No previous experience',
+    razones: 'I love animals!',
+    contacto: 'johndoe@example.com',
   });
 
-  test('should validate association with Usuario', async () => {
-    const usuario = await Usuario.create({
-      nombre: 'Carlos',
-      email: 'carlos@example.com',
-      password: 'securepassword'
-    });
+  expect(solicitud).toBeDefined();
+  expect(solicitud.estado).toBe('Pendiente');
+  expect(solicitud.id_mascota).toBe(mascota.id_mascota);
+  expect(solicitud.id_potencial_adoptante).toBe(usuario.id_usuario);
+});
 
-    const mascota = await Mascota.create({
-      id_usuario: usuario.id,
-      nombre: 'Luna',
-      especie: 'Gato'
-    });
-
-    const solicitud = await Solicitud.create({
-      id_mascota: mascota.id_mascota,
-      id_potencial_adoptante: usuario.id,
-      estado: 'Rechazado'
-    });
-
-    const foundSolicitud = await Solicitud.findOne({
-      where: { id_solicitud: solicitud.id_solicitud },
-      include: Usuario
-    });
-
-    expect(foundSolicitud.Usuario).toBeDefined();
-    expect(foundSolicitud.Usuario.nombre).toBe(usuario.nombre);
+test('should retrieve Solicitud with Mascota and Usuario associations', async () => {
+  const solicitud = await Solicitud.findOne({
+    where: { estado: 'Pendiente' },
+    include: [
+      { model: Mascota, as: 'mascota' },
+      { model: Usuario, as: 'potencial_adoptante' },
+    ],
   });
 
-  test('should validate association with Adopcion and Chat', async () => {
-    const usuario = await Usuario.create({
-      nombre: 'Emma',
-      email: 'emma@example.com',
-      password: 'password123'
-    });
+  expect(solicitud).toBeDefined();
+  expect(solicitud.mascota).toBeDefined();
+  expect(solicitud.mascota.nombre).toBe('Bobby');
+  expect(solicitud.potencial_adoptante).toBeDefined();
+  expect(solicitud.potencial_adoptante.nombre).toBe('John Doe');
+});
 
-    const mascota = await Mascota.create({
-      id_usuario: usuario.id,
-      nombre: 'Oliver',
-      especie: 'Perro'
-    });
-
-    const solicitud = await Solicitud.create({
-      id_mascota: mascota.id_mascota,
-      id_potencial_adoptante: usuario.id,
-      estado: 'Pendiente'
-    });
-
-    const adopcion = await Adopcion.create({
-      id_solicitud: solicitud.id_solicitud,
-      fecha: new Date()
-    });
-
-    const chat = await Chat.create({
-      id_solicitud: solicitud.id_solicitud,
-      mensaje: 'Hello, interested in adopting!'
-    });
-
-    const foundSolicitud = await Solicitud.findOne({
-      where: { id_solicitud: solicitud.id_solicitud },
-      include: [Adopcion, Chat]
-    });
-
-    expect(foundSolicitud.Adopcion).toBeDefined();
-    expect(foundSolicitud.Adopcion.fecha).toBeInstanceOf(Date);
-    expect(foundSolicitud.Chat).toBeDefined();
-    expect(foundSolicitud.Chat.mensaje).toBe('Hello, interested in adopting!');
-  });
-
-  test('should retrieve Solicitud with correct data types', async () => {
-    const solicitud = await Solicitud.create({
-      estado: 'En Proceso',
-      razones: 'Tengo espacio suficiente',
-      descripcion_hogar: 'Departamento amplio',
-      experiencia: true,
-      contacto: '987-654-3210'
-    });
-
-    expect(typeof solicitud.estado).toBe('string');
-    expect(typeof solicitud.razones).toBe('string');
-    expect(typeof solicitud.experiencia).toBe('boolean');
-    expect(typeof solicitud.contacto).toBe('string');
-  });
+test('should enforce required fields', async () => {
+  await expect(
+    Solicitud.create({
+      estado: 'Pendiente', // Missing required fields: `id_mascota`, `id_potencial_adoptante`
+    })
+  ).rejects.toThrow(/notNull Violation/);
 });

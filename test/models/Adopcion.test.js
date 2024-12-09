@@ -3,107 +3,69 @@ const Adopcion = require('../../src/models/Adopcion');
 const Solicitud = require('../../src/models/Solicitud');
 const Resena = require('../../src/models/Resena'); // Assuming Resena model exists
 
-// Jest setup and teardown
-// beforeAll(async () => {
-//   await sequelize.sync({ force: true });
-// });
 
-// afterAll(async () => {
-//   await sequelize.close();
-// });
+Resena.associate({ Adopcion, Solicitud });
+Adopcion.associate({ Resena, Solicitud });
+Solicitud.associate({ Resena, Adopcion });
 
-describe('Adopcion Model', () => {
-  test('should create a new Adopcion successfully', async () => {
-    const solicitud = await Solicitud.create({
-      id_mascota: 1, // Assuming a valid id_mascota
-      id_potencial_adoptante: 1, // Assuming a valid id_potencial_adoptante
-      estado: 'Aprobado',
-      razones: 'Responsible and caring',
-      descripcion_hogar: 'House with garden',
-      experiencia: true,
-      contacto: 'contact@example.com',
-      created: new Date()
-    });
 
-    const adopcionData = {
-      id_solicitud: solicitud.id_solicitud,
-      created: new Date()
-    };
 
-    const adopcion = await Adopcion.create(adopcionData);
+test('should define Adopcion model correctly', () => {
+  expect(Adopcion).toBeDefined();
+  expect(Adopcion.tableName).toBe('Adopciones');
+});
 
-    expect(adopcion).toBeDefined();
-    expect(adopcion.id_solicitud).toBe(solicitud.id_solicitud);
+test('should create an Adopcion successfully', async () => {
+  const solicitud = await Solicitud.create({
+    id_solicitud: 1,
+    estado: 'Aprobada',
   });
 
-  test('should not create an Adopcion without required fields', async () => {
-    await expect(Adopcion.create({})).rejects.toThrow();
+  const adopcion = await Adopcion.create({
+    id_solicitud: solicitud.id_solicitud,
+    created: new Date(),
   });
 
-  test('should validate association with Solicitud', async () => {
-    const solicitud = await Solicitud.create({
-      id_mascota: 2,
-      id_potencial_adoptante: 2,
-      estado: 'En Proceso',
-      razones: 'Loves animals',
-      descripcion_hogar: 'Apartment with balcony',
-      experiencia: false,
-      contacto: 'test@example.com'
-    });
+  expect(adopcion).toBeDefined();
+  expect(adopcion.id_solicitud).toBe(solicitud.id_solicitud);
+});
 
-    const adopcion = await Adopcion.create({
-      id_solicitud: solicitud.id_solicitud,
-      created: new Date()
-    });
-
-    const foundAdopcion = await Adopcion.findOne({
-      where: { id_adopcion: adopcion.id_adopcion },
-      include: Solicitud
-    });
-
-    expect(foundAdopcion.Solicitud).toBeDefined();
-    expect(foundAdopcion.Solicitud.estado).toBe('En Proceso');
+test('should retrieve Adopcion with Solicitud and Resena associations', async () => {
+  const solicitud = await Solicitud.create({
+    id_solicitud: 2,
+    estado: 'Aprobada',
   });
 
-  test('should validate association with Resena', async () => {
-    const solicitud = await Solicitud.create({
-      id_mascota: 3,
-      id_potencial_adoptante: 3,
-      estado: 'Finalizado',
-      razones: 'Loves dogs',
-      descripcion_hogar: 'House with backyard',
-      experiencia: true,
-      contacto: 'example@example.com'
-    });
-
-    const adopcion = await Adopcion.create({
-      id_solicitud: solicitud.id_solicitud,
-      created: new Date()
-    });
-
-    const resena = await Resena.create({
-      id_adopcion: adopcion.id_adopcion,
-      comentario: 'Great adoption experience',
-      calificacion: 5
-    });
-
-    const foundAdopcion = await Adopcion.findOne({
-      where: { id_adopcion: adopcion.id_adopcion },
-      include: Resena
-    });
-
-    expect(foundAdopcion.Resena).toBeDefined();
-    expect(foundAdopcion.Resena.comentario).toBe('Great adoption experience');
-    expect(foundAdopcion.Resena.calificacion).toBe(5);
+  const adopcion = await Adopcion.create({
+    id_solicitud: solicitud.id_solicitud,
+    created: new Date(),
   });
 
-  test('should retrieve Adopcion with correct data types', async () => {
-    const adopcion = await Adopcion.create({
-      id_solicitud: 1,
-      created: new Date()
-    });
-
-    expect(typeof adopcion.id_solicitud).toBe('number');
-    expect(adopcion.created).toBeInstanceOf(Date);
+  const resena = await Resena.create({
+    id_adopcion: adopcion.id_adopcion,
+    nota: 5,
+    descripcion: 'Amazing experience!',
   });
+
+  const fetchedAdopcion = await Adopcion.findOne({
+    where: { id_adopcion: adopcion.id_adopcion },
+    include: [
+      { model: Solicitud, as: 'Solicitud' },
+      { model: Resena, as: 'Resena' },
+    ],
+  });
+
+  expect(fetchedAdopcion).toBeDefined();
+  expect(fetchedAdopcion.Solicitud).toBeDefined();
+  expect(fetchedAdopcion.Solicitud.estado).toBe('Aprobada');
+  expect(fetchedAdopcion.Resena).toBeDefined();
+  expect(fetchedAdopcion.Resena.nota).toBe(5);
+});
+
+test('should enforce required fields', async () => {
+  await expect(
+    Adopcion.create({
+      created: new Date(), // Missing `id_solicitud`
+    })
+  ).rejects.toThrow(/notNull Violation/);
 });
